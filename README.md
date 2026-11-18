@@ -14,6 +14,7 @@ Cronómetro online para la ronda de mate: el cebador pasa el mate, el que toma a
 - **Ranking en vivo** por tiempo total o promedio.
 - **Cerrar ronda** (cebador, arriba a la derecha): frena todos los tiempos y cierra la ronda para todos. Los que entren después ven el ranking final. Los participantes tienen ahí mismo **Salir de la ronda**.
 - **Volver a tu ronda**: si tu navegador tiene una ronda abierta, el inicio te muestra un botón para volver.
+- **Ventana flotante** (botón al lado de ajustes, solo Chrome y Edge de escritorio): una ventanita chica que queda encima de todo, como el miniplayer de Spotify. Muestra quién tiene el mate y su tiempo, y tiene el botón principal. Si te pasan el mate, titila.
 - **Barra espaciadora** = botón principal (pasar / devolver).
 - **Ajustes por usuario** (botón arriba a la derecha): tema claro / oscuro / automático, fondo de matecitos en movimiento o quieto, y sonido de avisos. Se guardan en el navegador de cada uno.
 - Versión local de una sola PC en `/local.html`.
