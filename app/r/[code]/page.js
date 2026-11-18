@@ -43,6 +43,8 @@ function Room({ code }) {
 
   const isCeb = Boolean(room && session?.role === 'ceb' && session.room_id === room.id);
   const me = session?.role === 'p' && room ? people.find((p) => p.id === session.pid) : null;
+  // El cebador también toma: es una persona más de la ronda
+  const cebMe = isCeb ? people.find((p) => p.id === room.ceb_pid) || null : null;
 
   // Si me sacaron de la ronda (o la ronda se reinició con otra), limpiar la sesión
   useEffect(() => {
@@ -131,7 +133,7 @@ function Room({ code }) {
   useEffect(() => {
     if (!slowKey || firedSlow.current.has(slowKey)) return;
     firedSlow.current.add(slowKey);
-    if (me && holder?.id === me.id) {
+    if ((me && holder?.id === me.id) || (cebMe && holder?.id === cebMe.id)) {
       alertAll({ kind: 'slow', emoji: '🐢', title: 'Llevás más de 2:30 con el mate', body: 'Dale que se enfría 🥶', color: '#ff4d6d' });
     } else if (isCeb && holder) {
       if (soundRef.current) ding('slow');
@@ -160,6 +162,12 @@ function Room({ code }) {
     run(() => rpc('ceb_action', { p_room: room.id, p_token: session.token, p_action: action, p_target: target }));
 
   const devolvi = () => run(() => rpc('devolvi', { p_pid: session.pid, p_token: session.token }));
+
+  const move = (pid, index) =>
+    run(() => rpc('ceb_move', { p_room: room.id, p_token: session.token, p_pid: pid, p_index: index }));
+
+  const cebVote = (yerba, agua) =>
+    run(() => rpc('ceb_vote', { p_room: room.id, p_token: session.token, p_yerba: yerba, p_agua: agua }));
 
   const vote = (yerba, agua) =>
     run(() => rpc('vote', { p_pid: session.pid, p_token: session.token, p_yerba: yerba, p_agua: agua }));
@@ -347,7 +355,7 @@ function Room({ code }) {
       ) : (
         <>
           <div className="rise" style={{ '--i': 3 }}>
-            <Cards room={room} people={people} now={now} meId={me?.id} isCeb={isCeb} onAction={act} />
+            <Cards room={room} people={people} now={now} meId={(me || cebMe)?.id} isCeb={isCeb} onAction={act} onMove={move} />
           </div>
           <div className="rise" style={{ '--i': 4 }}>
             <Ranking people={people} now={now} />
@@ -360,9 +368,9 @@ function Room({ code }) {
           room={room}
           people={people}
           votes={votes}
-          me={me}
+          me={me || cebMe}
           isCeb={isCeb}
-          onVote={vote}
+          onVote={isCeb ? cebVote : vote}
           onClose={() => act('close_vote')}
           onHide={() => setVoteHidden(true)}
         />
