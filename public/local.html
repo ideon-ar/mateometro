@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mateometro · local</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500&family=Inter:wght@500;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0d0c; --panel:#121614; --line:#1f2a25; --txt:#e9f1ec; --mute:#6f8279;
+    --a1:#4caf50; --a2:#c6e86b; --run1:#ff9a3c; --run2:#ff4d6d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--txt);font-family:Inter,system-ui,sans-serif;background:var(--bg);
+    padding:28px 18px 40px;
+  }
+  .bg{position:fixed;inset:0;z-index:-1;
+    background:var(--bg)}
+  .bg svg{width:100%;height:100%;opacity:.07}
+  .wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:26px}
+
+  header{display:flex;align-items:center;justify-content:center;gap:14px}
+  header svg{width:64px;height:64px}
+  h1{font-weight:800;font-size:clamp(32px,7vw,52px);letter-spacing:-1.5px;
+     color:var(--txt)}
+
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  @media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:460px){.grid{gap:10px}}
+
+  .p{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px 14px;
+     display:flex;flex-direction:column;align-items:center;gap:12px;
+     transition:border-color .3s}
+  .p.on{border-color:#ff9a3c66}
+  .name{font-weight:600;font-size:17px;display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+  .on .dot{background:var(--run1)}
+  @keyframes pulse{50%{opacity:.35}}
+  .ring{position:relative;width:100%;max-width:150px;aspect-ratio:1}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .track{stroke:var(--line)}
+  .prog{stroke:var(--a1);stroke-linecap:round}
+  .on .prog{stroke:var(--run1)}
+  .readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace}
+  .time{font-size:clamp(22px,4.6vw,30px);font-weight:300;font-variant-numeric:tabular-nums}
+  .cs{font-size:14px;color:var(--a2)}
+  .on .cs{color:var(--run1)}
+  .stats{display:flex;gap:14px;font-size:11px;color:var(--mute);letter-spacing:.5px;text-transform:uppercase}
+  .stats b{color:var(--txt);font-family:'JetBrains Mono',monospace;font-weight:500;text-transform:none}
+  .ctr{display:flex;gap:10px;align-items:center}
+  button{font-family:Inter,sans-serif;cursor:pointer;border:none;color:#fff;border-radius:999px;
+         transition:transform .15s, background .2s, opacity .2s;display:grid;place-items:center}
+  button:active{transform:scale(.92)}
+  button:disabled{opacity:.3;cursor:default}
+  .go{width:56px;height:56px;background:var(--a1)}
+  .go:hover{background:#5cbf60}
+  .on .go{background:var(--run1)}
+  .on .go:hover{background:#ffab5c}
+  .go svg{width:22px;height:22px;fill:#fff}
+  .rs{width:40px;height:40px;background:#151c19;border:1px solid var(--line);color:var(--txt)}
+  .rs:not(:disabled):hover{border-color:#3a4a42}
+  .rs svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+  .rank{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px}
+  .rhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+  .rhead h2{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--mute)}
+  .seg{display:flex;background:#151c19;border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{padding:7px 14px;font-size:12px;font-weight:600;color:var(--mute);background:none;display:block}
+  .seg button.act{background:#26332d;color:var(--txt)}
+  .rows{position:relative}
+  .row{position:absolute;left:0;right:0;height:52px;display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:12px;
+       transition:top .45s cubic-bezier(.2,.8,.2,1)}
+  .pos{font-weight:800;font-size:18px;color:var(--mute);text-align:center}
+  .row:first-child .pos{}
+  .bar{position:relative;height:38px;border-radius:12px;background:#151c19;overflow:hidden}
+  .fill{position:absolute;inset:0 auto 0 0;border-radius:12px;background:#2a4a33;transition:width .2s linear}
+  .lbl{position:absolute;inset:0;display:flex;align-items:center;padding:0 12px;font-weight:600;font-size:14px;gap:8px}
+  .val{font-family:'JetBrains Mono',monospace;font-size:14px;min-width:92px;text-align:right}
+  .row.top .pos{color:var(--run1)}
+  .row.top .fill{background:#5a3a1e}
+  .tag{font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--run1);color:var(--run1);padding:3px 7px;border-radius:999px}
+  .live{width:7px;height:7px;border-radius:50%;background:var(--run1)}
+  .foot{display:flex;justify-content:center}
+  .all{padding:10px 18px;font-size:13px;font-weight:600;background:#151c19;border:1px solid var(--line);color:var(--mute);display:flex;gap:8px}
+  .all:hover{color:var(--txt);border-color:#3a4a42}
+  .all svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+
+  .ceb{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px 22px;
+       display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;transition:border-color .3s}
+  .ceb.on{border-color:#4caf5066}
+  .ceb .ring{width:120px;max-width:none}
+  .ceb .time{font-size:24px}
+  .cinfo{display:flex;flex-direction:column;gap:6px}
+  .cinfo .name{font-size:20px}
+  .ceb.on .dot{background:var(--a1)}
+  .ceb.on .prog{stroke:var(--a1)}
+  .ceb.on .cs{color:var(--a2)}
+  .ceb .prog{stroke:#3a4a42}
+  .ronda{font-size:13px;color:var(--mute)}
+  .ronda b{color:var(--txt)}
+  .actions{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:220px}
+  .big{height:58px;border-radius:16px;padding:0 22px;font-size:16px;font-weight:600;background:var(--a1);color:#fff;display:flex;justify-content:center;gap:10px}
+  .big:hover{background:#5cbf60}
+  .big.ret{background:var(--run1)}
+  .big.ret:hover{background:#ffab5c}
+  .big svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .mini{display:flex;gap:8px}
+  .mini button{flex:1;height:36px;border-radius:12px;background:#151c19;border:1px solid var(--line);color:var(--mute);font-size:12px;font-weight:600;display:block}
+  .mini button:not(:disabled):hover{color:var(--txt);border-color:#3a4a42}
+  .p.next{border-style:dashed;border-color:#4caf5066}
+  .p .badge{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--mute);height:14px}
+  .p.next .badge{color:var(--a1)}
+  .p.on .badge{color:var(--run1)}
+  @media(max-width:700px){.ceb{grid-template-columns:auto 1fr}.actions{grid-column:1/-1;min-width:0}}
+
+  .p{--c:#4caf50;background:color-mix(in srgb,var(--c) 10%,var(--panel));border-color:color-mix(in srgb,var(--c) 28%,var(--line))}
+  .p .name .dot{background:var(--c)}
+  .p.on .name .dot{background:var(--run1)}
+  .p.on{border-color:var(--run1)}
+  .p.next{border-style:dashed;border-color:var(--c)}
+  .p.next .badge{color:var(--c)}
+  .p .prog{stroke:var(--c)}
+  .p.on .prog{stroke:var(--run1)}
+  .p .cs{color:var(--c)}
+  .p.on .cs{color:var(--run1)}
+  .row .fill{background:color-mix(in srgb,var(--c) 38%,#151c19)}
+  .row.top .fill{background:color-mix(in srgb,var(--c) 55%,#151c19)}
+  .row .lbl span:first-child{color:#fff}
+
+  .track{stroke:#2c3833}
+  .p .track{stroke:color-mix(in srgb,var(--c) 30%,#2c3833)}
+  .p.on .track{stroke:color-mix(in srgb,var(--run1) 25%,#2c3833)}
+  .prog{stroke-width:9}
+  .ceb .prog{stroke:#5d7468}
+</style>
+</head>
+<body>
+<!-- Fondo: patrón de matecitos sin relleno -->
+<div class="bg">
+  <svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <g id="mate" fill="none" stroke="#c6e86b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 22 C10 30 10 42 18 48 L32 48 C40 42 40 30 36 22 Z"/>
+        <ellipse cx="25" cy="22" rx="11" ry="3"/>
+        <path d="M17 52 h16"/>
+        <path d="M28 21 L36 4 h5"/>
+        <path d="M18 34 q7 4 14 0"/>
+      </g>
+      <pattern id="pat" width="120" height="120" patternUnits="userSpaceOnUse">
+        <use href="#mate" transform="translate(8,8) rotate(-12 25 30)"/>
+        <use href="#mate" transform="translate(66,62) rotate(14 25 30) scale(.8)"/>
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#pat)"/>
+  </svg>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gOff" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4caf50"/><stop offset="1" stop-color="#c6e86b"/></linearGradient>
+    <linearGradient id="gOn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4d6d"/><stop offset="1" stop-color="#ff9a3c"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 64 64" class="logo">
+      <defs>
+        <radialGradient id="gourd" cx=".35" cy=".35" r=".8"><stop offset="0" stop-color="#b9743f"/><stop offset=".6" stop-color="#7a4421"/><stop offset="1" stop-color="#4a2611"/></radialGradient>
+        <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a96a6"/><stop offset=".45" stop-color="#f4f7fa"/><stop offset=".7" stop-color="#b5c0cc"/><stop offset="1" stop-color="#6b7684"/></linearGradient>
+        <linearGradient id="metalV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef2f6"/><stop offset="1" stop-color="#7d8896"/></linearGradient>
+        <linearGradient id="yerba" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccc4a"/><stop offset="1" stop-color="#4f7d1c"/></linearGradient>
+        <clipPath id="mouth"><ellipse cx="32" cy="27" rx="16.5" ry="4.6"/></clipPath>
+      </defs>
+      <ellipse cx="32" cy="60" rx="15" ry="2.2" fill="#000" opacity=".35"/>
+      <path d="M14 27 C7 37 8 51 20 57.5 Q32 61.5 44 57.5 C56 51 57 37 50 27 Z" fill="url(#gourd)"/>
+      <path d="M17 34 C14 41 16 49 21 53" stroke="#fff" stroke-opacity=".22" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="32" cy="27" rx="18" ry="5.2" fill="#3a1d0b"/>
+      <g clip-path="url(#mouth)">
+        <rect x="10" y="20" width="44" height="14" fill="#5f8f24"/>
+        <ellipse cx="38" cy="28.5" rx="10" ry="3" fill="#3e6a16"/>
+      </g>
+      <path d="M14.4 27 C14.3 24.6 15.6 22.6 18.2 22.3 C22 22 27.5 24.2 34 28 Q24 30.6 14.4 27 Z" fill="url(#yerba)"/>
+      <g fill="#c5e48a" opacity=".85"><circle cx="18" cy="24" r=".6"/><circle cx="22" cy="24.3" r=".55"/><circle cx="25.5" cy="26" r=".5"/><circle cx="20" cy="26.6" r=".5"/></g>
+      <g fill="#355a12"><circle cx="16.5" cy="25.8" r=".5"/><circle cx="23.5" cy="27.4" r=".5"/><circle cx="28.5" cy="27.2" r=".45"/></g>
+      <path d="M39.5 28.5 L50.5 6" stroke="url(#metal)" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M50.5 6 Q52 3.6 55 3.8 L58.5 4" stroke="url(#metalV)" stroke-width="3" stroke-linecap="round" fill="none"/>
+      <rect x="45.2" y="14.5" width="5" height="2.6" rx="1" fill="url(#metal)" transform="rotate(-26.5 47.7 15.8)"/>
+      <path d="M14 27 A18 5.2 0 0 0 50 27" stroke="url(#metalV)" stroke-width="2.6" fill="none"/>
+      <path d="M14 27 A18 5.2 0 0 1 50 27" stroke="#9aa6b3" stroke-width="1.4" fill="none" opacity=".7"/>
+    </svg>
+    <h1>mateometro</h1>
+  </header>
+
+  <div class="ceb" id="ceb">
+    <div class="ring"><svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="90" fill="none" stroke-width="7"/>
+      <circle class="prog" id="cprog" cx="100" cy="100" r="90" fill="none" stroke-width="7"/></svg>
+      <div class="readout"><div class="time" id="ctime">00:00</div><div class="cs" id="ccs">.00</div></div></div>
+    <div class="cinfo">
+      <div class="name"><span class="dot"></span>Cebador</div>
+      <div class="stats"><span>Cebados <b id="cr">0</b></span></div>
+      <div class="ronda" id="ronda">Todavía no arrancó la ronda</div>
+    </div>
+    <div class="actions">
+      <button class="big" id="main"></button>
+      <div class="mini">
+        <button id="skip" title="Saltear al siguiente">Saltear</button>
+        <button id="stop" title="Pausar todo">Pausar</button>
+        <button id="all">Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="rank">
+    <div class="rhead">
+      <h2>Ranking de demora</h2>
+      <div class="seg">
+        <button data-m="total" class="act">Total</button>
+        <button data-m="avg">Promedio</button>
+      </div>
+    </div>
+    <div class="rows" id="rows"></div>
+  </div>
+
+</div>
+
+<script>
+const PEOPLE=[['Gabino','#a78bfa'],['Magali','#f472b6'],['Lucia','#facc15'],['Celeste','#38bdf8'],['Santino','#86efac']];
+const NAMES=PEOPLE.map(x=>x[0]);
+const C=2*Math.PI*90;
+const ICO_PASS='<svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
+const ICO_BACK='<svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg>';
+const $=id=>document.getElementById(id);
+let mode='total';
+// state: 'idle' | 'ceb' (cebador tiene el mate) | 'out' (lo tiene alguien)
+let state='idle', turn=0, holder=null, round=1, paused=false;
+
+const mk=(name,i)=>({name,i,acc:0,start:0,on:false,rounds:0});
+const P=PEOPLE.map(([n,c],i)=>Object.assign(mk(n,i),{c}));
+const CEB=mk('Cebador',-1);
+const t=p=>p.on?p.acc+performance.now()-p.start:p.acc;
+const avg=p=>p.rounds?t(p)/p.rounds:0;
+const pad=n=>String(n).padStart(2,'0');
+function fmt(ms){const cs=Math.floor(ms/10)%100,s=Math.floor(ms/1000)%60,m=Math.floor(ms/60000)%60,h=Math.floor(ms/3600000);
+  return {main:(h?h+':':'')+pad(m)+':'+pad(s),cs:'.'+pad(cs)}}
+const run=p=>{if(!p.on){p.start=performance.now();p.on=true;}};
+const halt=p=>{if(p.on){p.acc+=performance.now()-p.start;p.on=false;}};
+$('cprog').style.strokeDasharray=C;
+
+const grid=$('grid'),rows=$('rows');
+P.forEach(p=>{
+  const el=document.createElement('div');el.className='p';el.style.setProperty('--c',p.c);
+  el.innerHTML=`<div class="name"><span class="dot"></span>${p.name}</div>
+    <div class="ring"><svg viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="90" fill="none" stroke-width="7"/>
+      <circle class="prog" cx="100" cy="100" r="90" fill="none" stroke-width="7" style="stroke-dasharray:${C};stroke-dashoffset:${C}"/></svg>
+      <div class="readout"><div class="time">00:00</div><div class="cs">.00</div></div></div>
+    <div class="stats"><span>Mates <b class="r">0</b></span><span>Prom <b class="a">00:00</b></span></div>
+    <div class="badge"></div>`;
+  grid.appendChild(el);
+  p.el=el;p.q={time:el.querySelector('.time'),cs:el.querySelector('.cs'),prog:el.querySelector('.prog'),
+    r:el.querySelector('.r'),a:el.querySelector('.a'),badge:el.querySelector('.badge')};
+  const row=document.createElement('div');row.className='row';row.style.setProperty('--c',p.c);
+  row.innerHTML=`<div class="pos"></div><div class="bar"><div class="fill"></div><div class="lbl"></div></div><div class="val"></div>`;
+  rows.appendChild(row);
+  p.row=row;p.rq={pos:row.querySelector('.pos'),fill:row.querySelector('.fill'),lbl:row.querySelector('.lbl'),val:row.querySelector('.val')};
+});
+rows.style.height=(P.length*58)+'px';
+
+function main(){
+  paused=false;
+  if(state==='idle'||state==='ceb'){
+    if(state==='idle'){state='ceb';run(CEB);ui();return;}
+    // Pasé el mate
+    halt(CEB);holder=P[turn];holder.rounds++;run(holder);CEB.rounds++;state='out';
+  }else{
+    // Devolvieron el mate
+    halt(holder);holder=null;turn=(turn+1)%P.length;if(turn===0)round++;run(CEB);state='ceb';
+  }
+  ui();
+}
+function skip(){
+  if(state==='out'){halt(holder);holder=null;run(CEB);state='ceb';}
+  turn=(turn+1)%P.length;if(turn===0)round++;ui();
+}
+function stop(){
+  if(state==='idle')return;
+  if(paused){ // reanudar
+    paused=false;(state==='out'?run(holder):run(CEB));
+  }else{paused=true;halt(CEB);P.forEach(halt);}
+  ui();
+}
+function resetAll(){
+  [CEB,...P].forEach(p=>{p.on=false;p.acc=0;p.rounds=0;});
+  state='idle';turn=0;holder=null;round=1;paused=false;ui();
+}
+function ui(){
+  const b=$('main'),next=P[turn].name;
+  if(state==='idle'){b.className='big';b.innerHTML='Arrancar a cebar';}
+  else if(state==='ceb'){b.className='big';b.innerHTML=ICO_PASS+'Pasé el mate';}
+  else{b.className='big ret';b.innerHTML=ICO_BACK+'Devolvieron el mate';}
+  $('ceb').classList.toggle('on',CEB.on);
+  $('ronda').innerHTML=state==='idle'?'Todavía no arrancó la ronda':
+    state==='out'?`Ronda <b>${round}</b> · Lo tiene <b>${holder.name}</b>`:
+    `Ronda <b>${round}</b> · Le toca a <b>${next}</b>`;
+  $('skip').disabled=state==='idle';
+  $('stop').disabled=state==='idle';
+  $('stop').textContent=paused?'Seguir':'Pausar';
+  P.forEach((p,k)=>{
+    p.el.classList.toggle('on',p.on);
+    const isNext=state!=='idle'&&state!=='out'&&k===turn;
+    p.el.classList.toggle('next',isNext);
+    p.q.badge.textContent=p.on?'Tiene el mate':(state==='out'&&holder===p)?'En pausa':isNext?'Le toca':'';
+  });
+}
+$('main').onclick=main;$('skip').onclick=skip;$('stop').onclick=stop;$('all').onclick=resetAll;
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
+  mode=b.dataset.m;document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('act',x===b));
+});
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();main();}});
+
+function frame(){
+  const cm=t(CEB),cf=fmt(cm);
+  $('ctime').textContent=cf.main;$('ccs').textContent=cf.cs;$('cr').textContent=CEB.rounds;
+  $('cprog').style.strokeDashoffset=C*(1-(cm%60000)/60000);
+  P.forEach(p=>{
+    const ms=t(p),f=fmt(ms);
+    p.q.time.textContent=f.main;p.q.cs.textContent=f.cs;
+    p.q.prog.style.strokeDashoffset=C*(1-(ms%60000)/60000);
+    p.q.r.textContent=p.rounds;p.q.a.textContent=fmt(avg(p)).main;
+  });
+  const val=p=>mode==='total'?t(p):avg(p);
+  const sorted=[...P].sort((a,b)=>val(b)-val(a)||a.i-b.i);
+  sorted.forEach((p,k)=>{
+    const v=val(p),f=fmt(v),max=Math.max(1,val(sorted[0]));
+    p.row.style.top=(k*58)+'px';
+    p.row.classList.toggle('top',k===0&&v>0);
+    p.rq.pos.textContent=k+1;
+    p.rq.fill.style.width=(v/max*100)+'%';
+    p.rq.val.textContent=f.main+f.cs;
+    p.rq.lbl.innerHTML=`<span>${p.name}</span>${p.on?'<span class="live"></span>':''}${k===0&&v>0?'<span class="tag">el más lento</span>':''}`;
+  });
+  requestAnimationFrame(frame);
+}
+ui();frame();
+</script>
+</body>
+</html>
