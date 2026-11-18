@@ -44,6 +44,8 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
   const next = people.find((p) => p.id === room.next_id);
   const holder = people.find((p) => p.id === room.holder_id);
   const on = Boolean(room.ceb_started_at);
+  const selfNext = next && next.id === room.ceb_pid; // le toca tomar al cebador
+  const selfHolding = holder && holder.id === room.ceb_pid;
 
   let main = null;
   if (isCeb) {
@@ -57,14 +59,14 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
       main = (
         <button className="big" disabled={busy || !next} onClick={() => onAction('pass')}>
           <Arrow />
-          {next ? `Pasé el mate a ${next.name}` : 'Esperando gente…'}
+          {selfNext ? 'Me sirvo un mate' : next ? `Pasé el mate a ${next.name}` : 'Esperando gente…'}
         </button>
       );
     else
       main = (
         <button className="big ret" disabled={busy} onClick={() => onAction('return')}>
           <Arrow back />
-          {holder ? `${holder.name} devolvió el mate` : 'Devolvieron el mate'}
+          {selfHolding ? 'Listo, ya tomé' : holder ? `${holder.name} devolvió el mate` : 'Devolvieron el mate'}
         </button>
       );
   }
@@ -121,7 +123,7 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
               Reiniciar
             </button>
           </div>
-          <div className="hint">Tip: tocá una tarjeta para elegir quién sigue · ◀ ▶ para ordenar la ronda</div>
+          <div className="hint">Tip: arrastrá las tarjetas para ordenar la ronda · tocá una para elegir quién sigue</div>
         </div>
       )}
     </div>

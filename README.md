@@ -4,7 +4,7 @@ Cronómetro online para la ronda de mate: el cebador pasa el mate, el que toma a
 
 ## Qué tiene
 
-- **Cebador** (el que crea la ronda): pasa el mate, ordena la ronda (◀ ▶), elige quién sigue tocando una tarjeta, saltea, pausa, reinicia y saca gente.
+- **Cebador** (el que crea la ronda): también toma, así que entra solo a la ronda como uno más (con su tarjeta, sus tiempos y su lugar en el ranking). Pasa el mate, ordena la ronda arrastrando las tarjetas (o con ◀ ▶), elige quién sigue tocando una tarjeta, saltea, pausa, reinicia y saca gente.
 - **Participantes**: se suman con nombre, apodo (🎲 al azar) y avatar. Ven todo en vivo y tienen un solo botón: **"Devolví el mate"**. No pueden tocar nada del cebador.
 - **Avisos** (sonido + notificación del sistema + pantalla titilando):
   - al cebador → "Fulano devolvió el mate"
@@ -30,7 +30,9 @@ La seguridad no necesita login: al crear la ronda o sumarte, tu navegador guarda
    - **Project URL** → `https://xxxx.supabase.co`
    - **anon public key** (o la *publishable key*, empieza con `sb_publishable_`)
 
-> **¿Ya tenías el mateometro andando?** No hace falta correr todo de nuevo: pegá y corré `supabase/migracion_01_cerrar_ronda.sql` (agrega "Cerrar ronda"). Se puede correr más de una vez sin problema.
+> **¿Ya tenías el mateometro andando?** No hace falta correr todo de nuevo: corré las migraciones que te falten, en orden. Cada una se puede correr más de una vez sin problema.
+> - `supabase/migracion_01_cerrar_ronda.sql`: agrega "Cerrar ronda".
+> - `supabase/migracion_02_cebador_toma.sql`: el cebador entra a la ronda y se pueden arrastrar las tarjetas.
 
 > Si en el paso 2 te tira error con `supabase_realtime`, andá a **Database → Publications → supabase_realtime** y activá la tabla `rooms`. Es lo que hace que todo se actualice al instante. Igual, si no está activado, la página se refresca sola cada 5 segundos.
 

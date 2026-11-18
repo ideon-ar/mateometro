@@ -6,6 +6,7 @@ import { JoinForm } from '@/components/Panels';
 import { configured, rpc, supabase } from '@/lib/supabase';
 import { setSession, listSessions, clearSession } from '@/lib/session';
 import { unlockAudio } from '@/lib/alerts';
+import { pickColor } from '@/lib/fun';
 import NotConfigured from '@/components/NotConfigured';
 import Settings from '@/components/Settings';
 
@@ -46,7 +47,7 @@ export default function Home() {
     setError('');
     unlockAudio();
     try {
-      const r = await rpc('create_room', { p_name: name, p_avatar: avatar });
+      const r = await rpc('create_room', { p_name: name, p_avatar: avatar, p_color: pickColor(name) });
       setSession(r.code, { role: 'ceb', room_id: r.room_id, token: r.token });
       router.push(`/r/${r.code}`);
     } catch (e) {

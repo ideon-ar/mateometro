@@ -27,11 +27,14 @@ create table if not exists public.rooms (
   version          bigint not null default 0,
   closed           boolean not null default false,
   closed_at        timestamptz,
+  ceb_pid          uuid,          -- el cebador también toma: es una persona más de la ronda
   created_at       timestamptz not null default now()
 );
 -- Para bases creadas antes de "Cerrar ronda"
 alter table public.rooms add column if not exists closed    boolean not null default false;
 alter table public.rooms add column if not exists closed_at timestamptz;
+-- Para bases creadas antes de que el cebador tome
+alter table public.rooms add column if not exists ceb_pid   uuid;
 
 create table if not exists public.participants (
   id          uuid primary key default gen_random_uuid(),
@@ -152,9 +155,11 @@ end $$;
 -- ---------- API pública (RPC) ----------
 create or replace function public.server_now() returns timestamptz language sql stable as $$ select now() $$;
 
-create or replace function public.create_room(p_name text, p_avatar text default '🧉') returns json
+-- Crear la ronda: el cebador se suma solo como una persona más (también toma)
+drop function if exists public.create_room(text, text);
+create or replace function public.create_room(p_name text, p_avatar text default '🧉', p_color text default null) returns json
 language plpgsql security definer set search_path = public, mt as $$
-declare v_code text; v_id uuid; v_tok text; i int;
+declare v_code text; v_id uuid; v_tok text; v_pid uuid; i int;
 begin
   if coalesce(trim(p_name), '') = '' then raise exception 'Falta el nombre'; end if;
   loop
@@ -169,7 +174,12 @@ begin
     returning id into v_id;
   v_tok := mt.tok();
   insert into mt.room_secrets values (v_id, v_tok);
-  return json_build_object('room_id', v_id, 'code', v_code, 'token', v_tok);
+  insert into participants (room_id, name, avatar, color, position)
+    values (v_id, left(trim(p_name), 24), left(coalesce(nullif(p_avatar, ''), '🧉'), 8),
+            case when p_color ~ '^#[0-9a-fA-F]{6}$' then p_color else '#a78bfa' end, 1)
+    returning id into v_pid;
+  update rooms set ceb_pid = v_pid, next_id = v_pid where id = v_id;
+  return json_build_object('room_id', v_id, 'code', v_code, 'token', v_tok, 'participant_id', v_pid);
 end $$;
 
 create or replace function public.join_room(p_code text, p_name text, p_nickname text, p_avatar text, p_color text) returns json
@@ -327,6 +337,7 @@ begin
     end if;
 
   when 'kick' then
+    if p_target = r.ceb_pid then raise exception 'Al cebador no se lo puede sacar de la ronda'; end if;
     perform mt.remove_participant(p_room, p_target);
 
   when 'close_vote' then
@@ -351,15 +362,54 @@ begin
   update rooms set version = version + 1 where id = p_room;
 end $$;
 
+-- Ordenar la ronda arrastrando: pone a p_pid en el lugar p_index (0 = primero)
+create or replace function public.ceb_move(p_room uuid, p_token text, p_pid uuid, p_index int) returns void
+language plpgsql security definer set search_path = public, mt as $$
+declare r rooms; ids uuid[]; k int;
+begin
+  if not exists (select 1 from mt.room_secrets where room_id = p_room and token = p_token) then
+    raise exception 'Solo el cebador puede hacer esto'; end if;
+  select * into r from rooms where id = p_room for update;
+  if r.closed then raise exception 'La ronda ya está cerrada: no se puede hacer nada más'; end if;
+  if not exists (select 1 from participants where id = p_pid and room_id = p_room) then
+    raise exception 'Esa persona ya no está en la ronda'; end if;
+  select coalesce(array_agg(id order by position), '{}') into ids from participants where room_id = p_room and id <> p_pid;
+  k := greatest(0, least(coalesce(p_index, 0), coalesce(array_length(ids, 1), 0)));
+  ids := ids[1:k] || p_pid || ids[k + 1:];
+  update participants p set position = x.n from unnest(ids) with ordinality as x(id, n) where p.id = x.id;
+  if r.state = 'idle' then  -- antes de arrancar, el primero de la lista es el que sigue
+    update rooms set next_id = ids[1] where id = p_room;
+  end if;
+  update rooms set version = version + 1 where id = p_room;
+end $$;
+
+-- El cebador también vota (yerba / agua)
+create or replace function public.ceb_vote(p_room uuid, p_token text, p_yerba boolean, p_agua boolean) returns void
+language plpgsql security definer set search_path = public, mt as $$
+declare r rooms;
+begin
+  if not exists (select 1 from mt.room_secrets where room_id = p_room and token = p_token) then
+    raise exception 'Solo el cebador puede hacer esto'; end if;
+  select * into r from rooms where id = p_room;
+  if r.closed then raise exception 'La ronda ya terminó: la votación está cerrada'; end if;
+  if r.ceb_pid is null then raise exception 'El cebador no está en la ronda'; end if;
+  if not r.vote_open then raise exception 'No hay votación abierta'; end if;
+  insert into votes (room_id, n, participant_id, yerba, agua) values (r.id, r.vote_n, r.ceb_pid, p_yerba, p_agua)
+  on conflict (room_id, n, participant_id) do update set yerba = excluded.yerba, agua = excluded.agua;
+  update rooms set version = version + 1 where id = r.id;
+end $$;
+
 -- ---------- Permisos ----------
 revoke all on schema mt from public, anon, authenticated;
 grant usage on schema public to anon, authenticated;
 grant select on public.rooms, public.participants, public.votes to anon, authenticated;
 revoke insert, update, delete on public.rooms, public.participants, public.votes from anon, authenticated;
 grant execute on function public.server_now()                                      to anon, authenticated;
-grant execute on function public.create_room(text, text)                           to anon, authenticated;
+grant execute on function public.create_room(text, text, text)                     to anon, authenticated;
 grant execute on function public.join_room(text, text, text, text, text)           to anon, authenticated;
 grant execute on function public.leave_room(uuid, text)                            to anon, authenticated;
 grant execute on function public.devolvi(uuid, text)                               to anon, authenticated;
 grant execute on function public.vote(uuid, text, boolean, boolean)                to anon, authenticated;
 grant execute on function public.ceb_action(uuid, text, text, uuid)                to anon, authenticated;
+grant execute on function public.ceb_move(uuid, text, uuid, int)                    to anon, authenticated;
+grant execute on function public.ceb_vote(uuid, text, boolean, boolean)            to anon, authenticated;
