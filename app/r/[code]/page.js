@@ -7,6 +7,7 @@ import { Cards, Ranking } from '@/components/Board';
 import { CebPanel, MePanel, JoinForm, VoteModal, Flash, ExitButton, ClosedPanel } from '@/components/Panels';
 import NotConfigured from '@/components/NotConfigured';
 import Settings from '@/components/Settings';
+import { useMiniWindow, MiniButton, MiniWindow } from '@/components/Mini';
 import { usePrefs } from '@/lib/prefs';
 import { configured, rpc } from '@/lib/supabase';
 import { useRoom, useNow } from '@/lib/useRoom';
@@ -34,6 +35,7 @@ function Room({ code }) {
   const [voteHidden, setVoteHidden] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [kicked, setKicked] = useState(false);
+  const mini = useMiniWindow(); // ventanita flotante
 
   useEffect(() => {
     setSess(getSession(code));
@@ -231,19 +233,29 @@ function Room({ code }) {
     if (r === 'granted') notify('🧉 Avisos activados', 'Así te enterás aunque estés en otra ventana', 'mateometro-test');
   };
 
+  // Botón principal (barra espaciadora y ventanita flotante). Devuelve true si hizo algo.
+  const primary = () => {
+    if (busy || !room || room.closed) return false;
+    if (isCeb) {
+      if (room.state === 'idle') act('start');
+      else if (room.state === 'ceb' && room.next_id) act('pass');
+      else if (room.state === 'out') act('return');
+      else return false;
+      return true;
+    }
+    if (me && room.state === 'out' && room.holder_id === me.id) {
+      devolvi();
+      return true;
+    }
+    return false;
+  };
+
   // Barra espaciadora = botón principal
   useEffect(() => {
     const onKey = (e) => {
-      if (e.code !== 'Space' || /input|textarea/i.test(e.target.tagName) || busy || !room || room.closed) return;
-      if (isCeb) {
-        e.preventDefault();
-        if (room.state === 'idle') act('start');
-        else if (room.state === 'ceb' && room.next_id) act('pass');
-        else if (room.state === 'out') act('return');
-      } else if (me && room.state === 'out' && room.holder_id === me.id) {
-        e.preventDefault();
-        devolvi();
-      }
+      if (e.code !== 'Space' || /input|textarea/i.test(e.target.tagName)) return;
+      if (isCeb || me) e.preventDefault();
+      primary();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -274,6 +286,21 @@ function Room({ code }) {
       </main>
     );
 
+  const miniEl = mini.win ? (
+    <MiniWindow
+      win={mini.win}
+      room={room}
+      people={people}
+      offset={offset}
+      isCeb={isCeb}
+      self={me || cebMe}
+      busy={busy}
+      flash={flash}
+      onDismiss={dismiss}
+      onPrimary={primary}
+    />
+  ) : null;
+
   if (room.closed)
     return (
       <main className="wrap closed-wrap">
@@ -286,6 +313,7 @@ function Room({ code }) {
           </div>
         </div>
         <ClosedPanel room={room} people={people} now={now} onHome={goHome} />
+        {miniEl}
       </main>
     );
 
@@ -314,6 +342,7 @@ function Room({ code }) {
               Salir de la ronda
             </ExitButton>
           )}
+          <MiniButton mini={mini} />
           <Settings />
         </div>
       </div>
@@ -382,6 +411,7 @@ function Room({ code }) {
       )}
 
       <Flash flash={flash} onDismiss={dismiss} />
+      {miniEl}
     </main>
   );
 }
