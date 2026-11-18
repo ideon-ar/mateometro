@@ -25,8 +25,13 @@ create table if not exists public.rooms (
   vote_open        boolean not null default false,
   vote_n           int not null default 0,
   version          bigint not null default 0,
+  closed           boolean not null default false,
+  closed_at        timestamptz,
   created_at       timestamptz not null default now()
 );
+-- Para bases creadas antes de "Cerrar ronda"
+alter table public.rooms add column if not exists closed    boolean not null default false;
+alter table public.rooms add column if not exists closed_at timestamptz;
 
 create table if not exists public.participants (
   id          uuid primary key default gen_random_uuid(),
@@ -173,6 +178,7 @@ declare r rooms; v_pid uuid; v_tok text; v_pos int;
 begin
   select * into r from rooms where code = upper(trim(p_code));
   if not found then raise exception 'No existe esa ronda'; end if;
+  if r.closed then raise exception 'Esta ronda ya terminó. Pedile al cebador que arme una nueva.'; end if;
   if coalesce(trim(p_name), '') = '' then raise exception 'Falta el nombre'; end if;
   if (select count(*) from participants where room_id = r.id) >= 12 then raise exception 'La ronda está llena'; end if;
   select coalesce(max(position), 0) + 1 into v_pos from participants where room_id = r.id;
@@ -194,6 +200,8 @@ begin
   if not exists (select 1 from mt.participant_secrets where participant_id = p_pid and token = p_token) then
     raise exception 'No autorizado'; end if;
   select room_id into v_room from participants where id = p_pid;
+  -- En una ronda cerrada no se borra a nadie, así el ranking final queda intacto
+  if exists (select 1 from rooms where id = v_room and closed) then return; end if;
   perform mt.remove_participant(v_room, p_pid);
   update rooms set version = version + 1 where id = v_room;
 end $$;
@@ -206,6 +214,8 @@ begin
   if not exists (select 1 from mt.participant_secrets where participant_id = p_pid and token = p_token) then
     raise exception 'No autorizado'; end if;
   select room_id into v_room from participants where id = p_pid;
+  if exists (select 1 from rooms where id = v_room and closed) then
+    raise exception 'La ronda ya terminó: no hay mate para devolver'; end if;
   if not exists (select 1 from rooms where id = v_room and state = 'out' and holder_id = p_pid) then
     raise exception 'No tenés el mate'; end if;
   perform mt.do_return(v_room, true);
@@ -220,6 +230,7 @@ begin
   if not exists (select 1 from mt.participant_secrets where participant_id = p_pid and token = p_token) then
     raise exception 'No autorizado'; end if;
   select rm.* into r from rooms rm join participants p on p.room_id = rm.id where p.id = p_pid;
+  if r.closed then raise exception 'La ronda ya terminó: la votación está cerrada'; end if;
   if not r.vote_open then raise exception 'No hay votación abierta'; end if;
   insert into votes (room_id, n, participant_id, yerba, agua) values (r.id, r.vote_n, p_pid, p_yerba, p_agua)
   on conflict (room_id, n, participant_id) do update set yerba = excluded.yerba, agua = excluded.agua;
@@ -234,6 +245,7 @@ begin
   if not exists (select 1 from mt.room_secrets where room_id = p_room and token = p_token) then
     raise exception 'Solo el cebador puede hacer esto'; end if;
   select * into r from rooms where id = p_room for update;
+  if r.closed then raise exception 'La ronda ya está cerrada: no se puede hacer nada más'; end if;
 
   case p_action
   when 'start' then
@@ -322,6 +334,15 @@ begin
 
   when 'open_vote' then
     update rooms set vote_open = true, vote_n = vote_n + 1 where id = p_room;
+
+  when 'close' then
+    -- Frena todos los cronómetros sumando lo que llevaban corrido, y cierra la ronda
+    perform mt.halt_c(p_room);
+    update participants set acc_ms = acc_ms + mt.ms(started_at), started_at = null
+      where room_id = p_room and started_at is not null;
+    update rooms set closed = true, closed_at = now(), state = 'idle',
+      holder_id = null, paused = false, vote_open = false
+    where id = p_room;
 
   else
     raise exception 'Acción desconocida: %', p_action;
