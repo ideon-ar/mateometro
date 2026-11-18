@@ -12,6 +12,8 @@ Cronómetro online para la ronda de mate: el cebador pasa el mate, el que toma a
   - a los dos → si alguien pasa los **2:30** con el mate (y un mensaje gracioso en su tarjeta)
 - **Votación cada 10 mates**: ¿cambiamos la yerba? ¿calentamos el agua?
 - **Ranking en vivo** por tiempo total o promedio.
+- **Cerrar ronda** (cebador, arriba a la derecha): frena todos los tiempos y cierra la ronda para todos. Los que entren después ven el ranking final. Los participantes tienen ahí mismo **Salir de la ronda**.
+- **Volver a tu ronda**: si tu navegador tiene una ronda abierta, el inicio te muestra un botón para volver.
 - **Barra espaciadora** = botón principal (pasar / devolver).
 - **Ajustes por usuario** (botón arriba a la derecha): tema claro / oscuro / automático, fondo de matecitos en movimiento o quieto, y sonido de avisos. Se guardan en el navegador de cada uno.
 - Versión local de una sola PC en `/local.html`.
@@ -27,6 +29,8 @@ La seguridad no necesita login: al crear la ronda o sumarte, tu navegador guarda
 3. Andá a **Project Settings → API** (o al botón **Connect**) y copiá:
    - **Project URL** → `https://xxxx.supabase.co`
    - **anon public key** (o la *publishable key*, empieza con `sb_publishable_`)
+
+> **¿Ya tenías el mateometro andando?** No hace falta correr todo de nuevo: pegá y corré `supabase/migracion_01_cerrar_ronda.sql` (agrega "Cerrar ronda"). Se puede correr más de una vez sin problema.
 
 > Si en el paso 2 te tira error con `supabase_realtime`, andá a **Database → Publications → supabase_realtime** y activá la tabla `rooms`. Es lo que hace que todo se actualice al instante. Igual, si no está activado, la página se refresca sola cada 5 segundos.
 

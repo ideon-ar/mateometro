@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Ring, Time } from './Board';
+import { Ring, Time, Ranking } from './Board';
 import { elapsedC, elapsedP, turnP, fmt } from '@/lib/time';
 import { AVATARS, randomNickname, SLOW_MS, slowMessage } from '@/lib/fun';
 
@@ -129,7 +129,7 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
 }
 
 // Panel propio del participante, con el botón grande de "Devolví el mate"
-export function MePanel({ room, me, people, now, onReturn, onLeave, busy }) {
+export function MePanel({ room, me, people, now, onReturn, busy }) {
   const holding = room.holder_id === me.id && room.state === 'out';
   const isNext = room.state !== 'out' && room.next_id === me.id;
   const turn = turnP(me, now);
@@ -171,11 +171,58 @@ export function MePanel({ room, me, people, now, onReturn, onLeave, busy }) {
           )}
         </button>
         <div className="status">{status}</div>
-        <button className="link" onClick={onLeave}>
-          Salir de la ronda
-        </button>
       </div>
     </div>
+  );
+}
+
+// Botón de la barra de arriba para irse: "Cerrar ronda" (cebador) o "Salir de la ronda" (participante)
+export function ExitButton({ children, onClick, busy }) {
+  return (
+    <button className="pill exit" onClick={onClick} disabled={busy}>
+      <svg viewBox="0 0 24 24" className="i">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="M16 17l5-5-5-5" />
+        <path d="M21 12H9" />
+      </svg>
+      {children}
+    </button>
+  );
+}
+
+// Pantalla que ven todos cuando el cebador cerró la ronda
+export function ClosedPanel({ room, people, now, onHome }) {
+  const at = room.closed_at
+    ? new Date(room.closed_at).toLocaleString('es-AR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
+  const mates = room.ceb_rounds;
+  return (
+    <>
+      <div className="closed rise" style={{ '--i': 1 }}>
+        <div className="closed-emoji">🧉</div>
+        <h2>La ronda terminó</h2>
+        <p className="sub">
+          Ronda de <b>{room.cebador_name}</b> · Código {room.code}
+          {at && <> · Cerrada el {at}</>}
+        </p>
+        <div className="closed-stat">
+          <b>{mates}</b>
+          <span>{mates === 1 ? 'mate cebado' : 'mates cebados'}</span>
+        </div>
+        <button className="big" onClick={onHome}>
+          Volver al inicio
+        </button>
+      </div>
+      <div className="rise" style={{ '--i': 2 }}>
+        {people.length ? (
+          <Ranking people={people} now={now} />
+        ) : (
+          <div className="empty">
+            <div className="muted">No llegó a sumarse nadie a esta ronda.</div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

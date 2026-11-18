@@ -1,10 +1,10 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/Art';
 import { Cards, Ranking } from '@/components/Board';
-import { CebPanel, MePanel, JoinForm, VoteModal, Flash } from '@/components/Panels';
+import { CebPanel, MePanel, JoinForm, VoteModal, Flash, ExitButton, ClosedPanel } from '@/components/Panels';
 import NotConfigured from '@/components/NotConfigured';
 import Settings from '@/components/Settings';
 import { usePrefs } from '@/lib/prefs';
@@ -22,6 +22,7 @@ export default function RoomPage() {
 }
 
 function Room({ code }) {
+  const router = useRouter();
   const { room, people, votes, offset, status, refresh } = useRoom(code);
   const now = useNow(offset);
   const [session, setSess] = useState(null);
@@ -45,7 +46,7 @@ function Room({ code }) {
 
   // Si me sacaron de la ronda (o la ronda se reinició con otra), limpiar la sesión
   useEffect(() => {
-    if (status !== 'ok' || session?.role !== 'p' || !room) return;
+    if (status !== 'ok' || session?.role !== 'p' || !room || room.closed) return;
     const fresh = Date.now() - (session.at || 0) < 8000;
     if (!fresh && !people.find((p) => p.id === session.pid)) {
       clearSession(code);
@@ -93,6 +94,10 @@ function Room({ code }) {
     const p = prev.current;
     prev.current = room;
     if (!p) return; // primera carga: no avisar nada
+    if (room.closed) {
+      dismiss(); // la ronda terminó: se apaga cualquier aviso pendiente
+      return;
+    }
 
     // Al cebador: devolvieron el mate
     if (isCeb && room.last_return_at && room.last_return_at !== p.last_return_at) {
@@ -168,6 +173,28 @@ function Room({ code }) {
     });
   };
 
+  // Cerrar ronda (cebador): frena todo, la cierra para todos y te lleva al inicio, como un "cerrar sesión"
+  const closeRound = async () => {
+    if (!window.confirm('¿Cerrar la ronda?\n\nSe frenan todos los tiempos y nadie más va a poder sumarse, tomar ni votar.')) return;
+    dismiss();
+    setBusy(true);
+    setError('');
+    try {
+      await rpc('ceb_action', { p_room: room.id, p_token: session.token, p_action: 'close', p_target: null });
+      clearSession(code);
+      router.replace('/');
+    } catch (e) {
+      setError(e.message);
+      setBusy(false);
+    }
+  };
+
+  // Desde la pantalla de cierre: borrar la sesión de esta ronda y volver al inicio
+  const goHome = () => {
+    clearSession(code);
+    router.push('/');
+  };
+
   const join = async ({ name, nickname, avatar }) => {
     unlockAudio();
     setBusy(true);
@@ -199,7 +226,7 @@ function Room({ code }) {
   // Barra espaciadora = botón principal
   useEffect(() => {
     const onKey = (e) => {
-      if (e.code !== 'Space' || /input|textarea/i.test(e.target.tagName) || busy || !room) return;
+      if (e.code !== 'Space' || /input|textarea/i.test(e.target.tagName) || busy || !room || room.closed) return;
       if (isCeb) {
         e.preventDefault();
         if (room.state === 'idle') act('start');
@@ -239,6 +266,21 @@ function Room({ code }) {
       </main>
     );
 
+  if (room.closed)
+    return (
+      <main className="wrap closed-wrap">
+        <div className="topbar rise">
+          <Link href="/" className="home">
+            <Header small />
+          </Link>
+          <div className="tools">
+            <Settings />
+          </div>
+        </div>
+        <ClosedPanel room={room} people={people} now={now} onHome={goHome} />
+      </main>
+    );
+
   const role = isCeb ? 'ceb' : me ? 'p' : 'viewer';
 
   return (
@@ -254,6 +296,16 @@ function Room({ code }) {
             </button>
           )}
           {perm === 'denied' && <span className="pill warn">Avisos bloqueados en el navegador</span>}
+          {role === 'ceb' && (
+            <ExitButton onClick={closeRound} busy={busy}>
+              Cerrar ronda
+            </ExitButton>
+          )}
+          {role === 'p' && (
+            <ExitButton onClick={leave} busy={busy}>
+              Salir de la ronda
+            </ExitButton>
+          )}
           <Settings />
         </div>
       </div>
@@ -277,7 +329,7 @@ function Room({ code }) {
       )}
 
       {role === 'p' && (
-        <div className="rise" style={{ '--i': 1 }}><MePanel room={room} me={me} people={people} now={now} onReturn={devolvi} onLeave={leave} busy={busy} /></div>
+        <div className="rise" style={{ '--i': 1 }}><MePanel room={room} me={me} people={people} now={now} onReturn={devolvi} busy={busy} /></div>
       )}
 
       <div className="rise" style={{ '--i': 2 }}>
