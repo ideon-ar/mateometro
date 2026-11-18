@@ -43,7 +43,7 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
 
   .bg{position:fixed;inset:0;z-index:-1;background:var(--bg);color:var(--pattern)}
   .bg svg{width:100%;height:100%;opacity:var(--pattern-o)}
-  .wrap{max-width:1140px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .wrap{width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 
   /* Marca (igual que siempre) */
   header{display:flex;align-items:center;justify-content:center;gap:14px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:4px}
@@ -102,7 +102,10 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
   .paused{color:var(--run1);font-weight:600}
 
   /* Tarjetas: el color de cada uno como franja arriba */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px}
+  .p .ring{max-width:170px}
+  html{min-width:320px}
+  @media(max-width:420px){body{padding:16px 12px 50px}.grid{gap:10px}}
   .p{--c:#8db35a;position:relative;border-radius:var(--r-lg);padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;gap:12px;
      box-shadow:inset 0 4px 0 var(--c),var(--edge);cursor:grab;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
   .p:hover{border-color:var(--line2);background:var(--panel2)}

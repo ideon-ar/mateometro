@@ -120,7 +120,8 @@ code { font-family: var(--mono); font-size: .86em; background: var(--panel2); pa
 [data-motion='off'] .bg-layer { animation: none; }
 
 /* ---------- Layout ---------- */
-.wrap { max-width: 1140px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+/* La ronda usa todo el ancho de la pantalla; el inicio y la ronda cerrada siguen angostos */
+.wrap { width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .wrap.narrow { max-width: 480px; gap: 18px; padding-top: 4vh; }
 .center { text-align: center; padding: 40px 0; }
 .muted { color: var(--mute); }
@@ -372,7 +373,9 @@ button.pill.exit:not(:disabled):hover .i { transform: translateX(2px); }
 }
 
 /* ---------- Tarjetas ---------- */
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+/* Las tarjetas se estiran hasta llenar la fila; cada una mide como mínimo 170px */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; }
+.p .ring { max-width: 170px; }
 /* Cada tarjeta lleva el color de la persona como una franja arriba */
 .p {
   --c: #4caf50;
@@ -381,6 +384,7 @@ button.pill.exit:not(:disabled):hover .i { transform: translateX(2px); }
 }
 .p:hover { border-color: var(--line2); }
 .p .who { align-self: stretch; }
+.p .name { flex-wrap: wrap; row-gap: 2px; }
 .p .track { stroke: color-mix(in srgb, var(--c) 18%, var(--track)); }
 .p .prog { stroke: var(--c); }
 .p .cs { color: color-mix(in srgb, var(--c) 70%, var(--mute)); }
@@ -490,6 +494,13 @@ button.pill.exit:not(:disabled):hover .i { transform: translateX(2px); }
 .flash-title { font-size: 22px; font-weight: 800; margin-top: 4px; letter-spacing: -.02em; font-family: var(--display); }
 .flash-body { color: var(--mute); margin-top: 4px; }
 .flash-hint { font-size: 12px; color: var(--mute); margin-top: 10px; }
+
+/* Ancho mínimo admisible: un celu chico. Por debajo, la página se desplaza de costado */
+html { min-width: 320px; }
+@media (max-width: 420px) {
+  body { padding: 16px 12px 60px; }
+  .grid { gap: 10px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
