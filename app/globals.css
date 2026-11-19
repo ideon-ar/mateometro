@@ -564,36 +564,40 @@ body.pip-body { padding: 8px; margin: 0; min-width: 0; height: 100vh; display: f
   animation: toastin .3s var(--ease) both;
 }
 
-/* ---------- Cebando: mate visto desde arriba atrás del emoji del cebador ---------- */
+/* ---------- Cebando: mate en vista 3/4 en el cuadradito del cebador ---------- */
 .ceb .who .av { width: 52px; height: 52px; font-size: 28px; border-radius: 14px; }
+.pip-av.ceb-av { width: 46px; height: 46px; font-size: 24px; }
 .ceb-av { position: relative; overflow: hidden; }
-.ceb-emoji { position: relative; z-index: 1; line-height: 1; }
-.ceb-av.is-cebando .ceb-emoji { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
-.cebando { position: absolute; inset: -2px; width: calc(100% + 4px); height: calc(100% + 4px); opacity: .62; animation: pop .4s ease both; }
-[data-theme='light'] .cebando { opacity: .55; }
-/* Ciclo de cebar (3.2s): cae el chorrito, se llena el pocito con una ondita, se sirve y se vacía */
-.ceb-stream { stroke-dasharray: 34; stroke-dashoffset: 34; animation: ceb-stream 3.2s ease-in-out infinite; }
-.ceb-pool { transform-box: fill-box; transform-origin: 60% 35%; transform: scale(0); animation: ceb-pool 3.2s ease-in-out infinite; }
-.ceb-ripple { transform-box: fill-box; transform-origin: center; opacity: 0; animation: ceb-ripple 1.1s ease-out infinite; }
+.ceb-emoji { position: relative; line-height: 1; }
+.ceb-av.is-cebando { background: color-mix(in srgb, #7dd3fc 12%, var(--panel2)); }
+.cebando { position: absolute; inset: 0; width: 100%; height: 100%; animation: pop .35s ease both; }
+/* Ciclo de cebar (3.2s): cae el chorrito, el agua sube en el pocito, se sirve y baja */
+.ceb-stream { opacity: 0; animation: ceb-stream 3.2s ease-in-out infinite; }
+.ceb-flow { animation: ceb-flow .45s linear infinite; }
+.ceb-water { transform: translateY(11px); animation: ceb-water 3.2s ease-in-out infinite; }
+.ceb-ripple { transform-box: fill-box; transform-origin: center; opacity: 0; animation: ceb-ripple .9s ease-out infinite; }
 @keyframes ceb-stream {
-  0% { stroke-dashoffset: 34; opacity: 1; }
-  16% { stroke-dashoffset: 0; }
-  58% { stroke-dashoffset: 0; opacity: 1; }
-  70% { stroke-dashoffset: -34; opacity: .6; }
-  71%, 100% { stroke-dashoffset: 34; opacity: 0; }
+  0% { opacity: 0; clip-path: inset(0 0 100% 0); }
+  6% { opacity: 1; }
+  16% { clip-path: inset(0 0 0 0); }
+  58% { opacity: 1; clip-path: inset(0 0 0 0); }
+  70%, 100% { opacity: 0; clip-path: inset(100% 0 0 0); }
 }
-@keyframes ceb-pool {
-  0%, 12% { transform: scale(0); opacity: .9; }
-  60% { transform: scale(1); opacity: 1; }
-  86% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(.2); opacity: 0; }
+@keyframes ceb-flow { to { stroke-dashoffset: -4.8; } }
+/* La ondita solo mientras cae el chorrito */
+.ceb-splash { opacity: 0; animation: ceb-splash 3.2s linear infinite; }
+@keyframes ceb-splash { 0%, 15% { opacity: 0; } 19%, 60% { opacity: 1; } 66%, 100% { opacity: 0; } }
+[data-motion='off'] .ceb-splash { animation: none; }
+@keyframes ceb-water {
+  0%, 14% { transform: translateY(11px); }
+  62%, 86% { transform: translateY(0); }
+  100% { transform: translateY(11px); }
 }
 @keyframes ceb-ripple {
-  0% { transform: scale(.4); opacity: .9; }
-  100% { transform: scale(2.6); opacity: 0; }
+  0% { transform: scale(.3); opacity: .95; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 /* Sin movimiento: queda el mate servido, quieto */
 [data-motion='off'] .ceb-stream { animation: none; opacity: 0; }
-[data-motion='off'] .ceb-pool { animation: none; transform: scale(1); }
-[data-motion='off'] .ceb-ripple { animation: none; }
-.pip-av.ceb-av { width: 46px; height: 46px; font-size: 24px; }
+[data-motion='off'] .ceb-water { animation: none; transform: none; }
+[data-motion='off'] .ceb-ripple, [data-motion='off'] .ceb-flow { animation: none; }
