@@ -64,3 +64,9 @@ npm run dev                  # abrí http://localhost:3000
 4. El cebador ordena la ronda con ◀ ▶ según cómo están sentados y toca **Arrancar a cebar**.
 
 Tip: si el navegador muestra "Avisos bloqueados", hay que habilitar las notificaciones del sitio desde el candadito 🔒 de la barra de direcciones.
+
+---
+
+## Licencia
+
+© 2026 **IDEON S.A.S.** Todos los derechos reservados. Este proyecto es privativo: que el código sea visible no da permiso para copiarlo, modificarlo ni usarlo. Ver [`LICENSE`](./LICENSE).
