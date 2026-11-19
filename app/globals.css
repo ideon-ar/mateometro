@@ -26,8 +26,8 @@
   --on-run1: #2a1405;
   --run2: #ec6a62;
   --pattern: #b3c27a;
-  --pattern-o1: 0.06;
-  --pattern-o2: 0.04;
+  --pattern-o1: 0.12;
+  --pattern-o2: 0.08;
   --edge: 0 1px 0 rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 18px 40px -18px rgba(0, 0, 0, 0.7);
   --track: #2f2a22;
@@ -57,8 +57,8 @@
   --on-run1: #ffffff;
   --run2: #c23b36;
   --pattern: #4f6328;
-  --pattern-o1: 0.075;
-  --pattern-o2: 0.05;
+  --pattern-o1: 0.14;
+  --pattern-o2: 0.095;
   --edge: 0 1px 0 #ddd3bf;
   --shadow-lg: 0 18px 40px -20px rgba(60, 40, 15, 0.3);
   --track: #e6dfd0;
@@ -112,8 +112,8 @@ code { font-family: var(--mono); font-size: .86em; background: var(--panel2); pa
 /* ---------- Fondo de matecitos ---------- */
 .bg { position: fixed; inset: 0; z-index: -1; background: var(--bg); overflow: hidden; transition: background-color .3s; }
 .bg-layer { position: absolute; inset: -260px; background: var(--pattern); -webkit-mask-repeat: repeat; mask-repeat: repeat; will-change: transform; }
-.bg-layer.l1 { opacity: var(--pattern-o1); -webkit-mask-size: 180px; mask-size: 180px; animation: drift1 70s linear infinite; }
-.bg-layer.l2 { opacity: var(--pattern-o2); -webkit-mask-size: 260px; mask-size: 260px; animation: drift2 110s linear infinite; }
+.bg-layer.l1 { opacity: var(--pattern-o1); -webkit-mask-size: 180px; mask-size: 180px; animation: drift1 38s linear infinite; }
+.bg-layer.l2 { opacity: var(--pattern-o2); -webkit-mask-size: 260px; mask-size: 260px; animation: drift2 60s linear infinite; }
 @keyframes drift1 { to { transform: translate(180px, 180px); } }
 @keyframes drift2 { to { transform: translate(-260px, 260px); } }
 .bg-fade { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, transparent 30%, var(--bg) 100%); opacity: .55; }

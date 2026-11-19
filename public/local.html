@@ -7,7 +7,9 @@
 <script>
 /* Mismo tema que la versión online (se guarda en este navegador) */
 (function(){try{var t=JSON.parse(localStorage.getItem('mateometro:pref:theme')||'"system"');
-document.documentElement.dataset.theme=t==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;}
+document.documentElement.dataset.theme=t==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):t;
+var m=JSON.parse(localStorage.getItem('mateometro:pref:motion')||String(!matchMedia('(prefers-reduced-motion: reduce)').matches));
+document.documentElement.dataset.motion=m?'on':'off';}
 catch(e){document.documentElement.dataset.theme='dark'}})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,13 +21,13 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
     --bg:#14120e;--panel:#1c1915;--panel2:#24201a;--raised:#322c24;--line:#2e2922;--line2:#443c31;
     --txt:#f2ebdc;--mute:#9d927f;--a1:#8db35a;--a1h:#9cc268;--a1-ink:#b9d78f;--a1-edge:#5e7d36;--on-a1:#142009;
     --run1:#e58f4f;--run1h:#eda066;--run1-edge:#a85d26;--on-run1:#2a1405;--run2:#ec6a62;
-    --pattern:#b3c27a;--pattern-o:.06;--edge:0 1px 0 rgba(0,0,0,.45);--shadow-lg:0 18px 40px -18px rgba(0,0,0,.7);
+    --pattern:#b3c27a;--pattern-o:.12;--edge:0 1px 0 rgba(0,0,0,.45);--shadow-lg:0 18px 40px -18px rgba(0,0,0,.7);
     --track:#2f2a22;color-scheme:dark}
   [data-theme='light']{
     --bg:#f3eee3;--panel:#fcfaf5;--panel2:#f1ebdf;--raised:#fffdf8;--line:#e2d9c7;--line2:#cbbfa8;
     --txt:#1f1a13;--mute:#6d6253;--a1:#3f6d2b;--a1h:#375f25;--a1-ink:#345c22;--a1-edge:#2a4a1c;--on-a1:#fff;
     --run1:#b7581f;--run1h:#a34d1a;--run1-edge:#7c3b13;--on-run1:#fff;--run2:#c23b36;
-    --pattern:#4f6328;--pattern-o:.075;--edge:0 1px 0 #ddd3bf;--shadow-lg:0 18px 40px -20px rgba(60,40,15,.3);
+    --pattern:#4f6328;--pattern-o:.14;--edge:0 1px 0 #ddd3bf;--shadow-lg:0 18px 40px -20px rgba(60,40,15,.3);
     --track:#e6dfd0;color-scheme:light}
   :root{--sans:'Schibsted Grotesk',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;
     --display:'Bricolage Grotesque','Schibsted Grotesk',sans-serif;--r-lg:16px;--r-md:12px;--r-sm:9px;--ease:cubic-bezier(.2,.8,.2,1)}
@@ -41,8 +43,10 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
   @keyframes pop{from{opacity:0;transform:scale(.97)}}
   .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);pointer-events:none;animation:ripple .55s ease-out forwards}
 
-  .bg{position:fixed;inset:0;z-index:-1;background:var(--bg);color:var(--pattern)}
-  .bg svg{width:100%;height:100%;opacity:var(--pattern-o)}
+  .bg{position:fixed;inset:0;z-index:-1;background:var(--bg);color:var(--pattern);overflow:hidden}
+  .bg svg{position:absolute;inset:-120px;width:calc(100% + 240px);height:calc(100% + 240px);opacity:var(--pattern-o);animation:drift 30s linear infinite}
+  @keyframes drift{to{transform:translate(120px,120px)}}
+  [data-motion='off'] .bg svg{animation:none}
   .wrap{width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px}
 
   /* Marca (igual que siempre) */
@@ -221,7 +225,7 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
         <button id="stop" title="Pausar todo">Pausar</button>
         <button id="all">Reiniciar</button>
       </div>
-      <div class="hint">Barra espaciadora = botón grande · arrastrá las tarjetas para ordenar · tocá una para elegir quién sigue</div>
+      <div class="hint">Atajo: barra espaciadora o Alt+M · arrastrá las tarjetas para ordenar · tocá una para elegir quién sigue</div>
     </div>
   </div>
 
@@ -394,7 +398,9 @@ $('main').onclick=main;$('skip').onclick=skip;$('stop').onclick=stop;$('all').on
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{
   mode=b.dataset.m;document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('act',x===b));
 });
-document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();main();}});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.code==='KeyM')){e.preventDefault();main();}
+});
 
 function frame(){
   const cm=t(CEB),cf=fmt(cm);
