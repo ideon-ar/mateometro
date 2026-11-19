@@ -115,7 +115,7 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
   // Barra espaciadora y efecto ripple también dentro de la ventanita
   useEffect(() => {
     const onKey = (e) => {
-      if (e.code !== 'Space') return;
+      if (e.code !== 'Space' && !(e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyM')) return;
       e.preventDefault();
       primaryRef.current?.();
     };
@@ -174,6 +174,8 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
         disabled: !next,
       };
     else btn = { text: mine ? 'Listo, ya tomé' : `${holder?.name || 'Lo'} devolvió el mate`, icon: <Arrow back />, ret: true };
+  } else if (!room.closed && self && room.state === 'ceb' && next?.id === self.id) {
+    btn = { text: 'Recibí el mate', icon: <Arrow /> };
   } else if (!room.closed && self) {
     btn = { text: 'Devolví el mate', icon: mine ? <Arrow back /> : null, ret: mine, disabled: !mine };
   }

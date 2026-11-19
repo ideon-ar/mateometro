@@ -123,7 +123,7 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
               Reiniciar
             </button>
           </div>
-          <div className="hint">Tip: arrastrá las tarjetas para ordenar la ronda · tocá una para elegir quién sigue</div>
+          <div className="hint">Atajo: barra espaciadora o Alt+M · arrastrá las tarjetas para ordenar · tocá una para elegir quién sigue</div>
         </div>
       )}
     </div>
@@ -131,7 +131,7 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
 }
 
 // Panel propio del participante, con el botón grande de "Devolví el mate"
-export function MePanel({ room, me, people, now, onReturn, busy }) {
+export function MePanel({ room, me, people, now, onReturn, onReceive, busy }) {
   const holding = room.holder_id === me.id && room.state === 'out';
   const isNext = room.state !== 'out' && room.next_id === me.id;
   const turn = turnP(me, now);
@@ -140,6 +140,7 @@ export function MePanel({ room, me, people, now, onReturn, busy }) {
 
   let status;
   if (holding) status = slow ? slowMessage(me.id + me.started_at) : '¡Tenés el mate! Cuando lo devuelvas, tocá el botón';
+  else if (isNext && room.state === 'ceb') status = '¡Te toca! Cuando te lo den, tocá el botón';
   else if (isNext) status = '¡Te toca! Preparate 👀';
   else if (room.state === 'out') status = `Lo tiene ${holder?.name || 'alguien'}`;
   else if (room.state === 'idle') status = 'Esperando que el cebador arranque';
@@ -162,17 +163,25 @@ export function MePanel({ room, me, people, now, onReturn, busy }) {
         </div>
       </div>
       <div className="meact">
-        <button className={`big ${holding ? 'ret' : ''}`} disabled={!holding || busy} onClick={onReturn}>
-          {holding ? (
-            <>
-              <Arrow back />
-              Devolví el mate
-            </>
-          ) : (
-            'Devolví el mate'
-          )}
-        </button>
+        {isNext && room.state === 'ceb' ? (
+          <button className="big" disabled={busy} onClick={onReceive}>
+            <Arrow />
+            Recibí el mate
+          </button>
+        ) : (
+          <button className={`big ${holding ? 'ret' : ''}`} disabled={!holding || busy} onClick={onReturn}>
+            {holding ? (
+              <>
+                <Arrow back />
+                Devolví el mate
+              </>
+            ) : (
+              'Devolví el mate'
+            )}
+          </button>
+        )}
         <div className="status">{status}</div>
+        <div className="hint">Atajo: barra espaciadora o Alt+M</div>
       </div>
     </div>
   );

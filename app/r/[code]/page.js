@@ -36,6 +36,7 @@ function Room({ code }) {
   const [shareUrl, setShareUrl] = useState('');
   const [kicked, setKicked] = useState(false);
   const mini = useMiniWindow(); // ventanita flotante
+  const receivedAt = useRef(0); // cuándo avisé yo mismo que recibí el mate
 
   useEffect(() => {
     setSess(getSession(code));
@@ -115,8 +116,8 @@ function Room({ code }) {
         color: who?.color,
       });
     }
-    // Al que toma: te pasaron el mate
-    if (me && room.holder_id === me.id && p.holder_id !== me.id) {
+    // Al que toma: te pasaron el mate (salvo que lo haya marcado él mismo con "Recibí el mate")
+    if (me && room.holder_id === me.id && p.holder_id !== me.id && Date.now() - receivedAt.current > 8000) {
       alertAll({ kind: 'pass', emoji: '🧉', title: '¡Te pasaron el mate!', body: `De parte de ${room.cebador_name}`, color: me.color });
     }
     // A todos: se abrió una votación
@@ -164,6 +165,11 @@ function Room({ code }) {
     run(() => rpc('ceb_action', { p_room: room.id, p_token: session.token, p_action: action, p_target: target }));
 
   const devolvi = () => run(() => rpc('devolvi', { p_pid: session.pid, p_token: session.token }));
+
+  const recibi = () => {
+    receivedAt.current = Date.now();
+    run(() => rpc('recibi', { p_pid: session.pid, p_token: session.token }));
+  };
 
   const move = (pid, index) =>
     run(() => rpc('ceb_move', { p_room: room.id, p_token: session.token, p_pid: pid, p_index: index }));
@@ -247,14 +253,20 @@ function Room({ code }) {
       devolvi();
       return true;
     }
+    if (me && room.state === 'ceb' && room.next_id === me.id) {
+      recibi();
+      return true;
+    }
     return false;
   };
 
-  // Barra espaciadora = botón principal
+  // Atajos = botón principal: barra espaciadora, o Alt+M (Option+M en Mac), que anda incluso escribiendo
   useEffect(() => {
     const onKey = (e) => {
-      if (e.code !== 'Space' || /input|textarea/i.test(e.target.tagName)) return;
-      if (isCeb || me) e.preventDefault();
+      const altM = e.altKey && !e.ctrlKey && !e.metaKey && e.code === 'KeyM';
+      const space = e.code === 'Space' && !/input|textarea/i.test(e.target.tagName);
+      if (!altM && !space) return;
+      if (isCeb || me || altM) e.preventDefault();
       primary();
     };
     window.addEventListener('keydown', onKey);
@@ -366,7 +378,7 @@ function Room({ code }) {
       )}
 
       {role === 'p' && (
-        <div className="rise" style={{ '--i': 1 }}><MePanel room={room} me={me} people={people} now={now} onReturn={devolvi} busy={busy} /></div>
+        <div className="rise" style={{ '--i': 1 }}><MePanel room={room} me={me} people={people} now={now} onReturn={devolvi} onReceive={recibi} busy={busy} /></div>
       )}
 
       <div className="rise" style={{ '--i': 2 }}>
