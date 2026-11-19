@@ -37,6 +37,7 @@ function Room({ code }) {
   const [kicked, setKicked] = useState(false);
   const mini = useMiniWindow(); // ventanita flotante
   const receivedAt = useRef(0); // cuándo avisé yo mismo que recibí el mate
+  const [hint, setHint] = useState(null); // mensajito cuando el atajo no tiene nada para hacer
 
   useEffect(() => {
     setSess(getSession(code));
@@ -260,6 +261,28 @@ function Room({ code }) {
     return false;
   };
 
+  // Por qué el atajo no hizo nada (para que no parezca que está roto)
+  const whyNothing = () => {
+    if (!room || busy) return null;
+    if (room.closed) return 'La ronda terminó';
+    if (!isCeb && !me) return 'Sumate a la ronda para usar el atajo';
+    if (room.state === 'idle') return 'La ronda todavía no arrancó';
+    const name = (id) => people.find((p) => p.id === id)?.name || 'otra persona';
+    if (room.state === 'out') return `Lo tiene ${name(room.holder_id)}: el atajo sirve para devolverlo cuando lo tengas vos`;
+    if (isCeb) return 'Esperando que se sume gente';
+    return `Todavía no te toca: le toca a ${name(room.next_id)}`;
+  };
+  const primaryOrHint = () => {
+    if (primary()) return;
+    const text = whyNothing();
+    if (text) setHint({ text, at: Date.now() });
+  };
+  useEffect(() => {
+    if (!hint) return;
+    const t = setTimeout(() => setHint(null), 3000);
+    return () => clearTimeout(t);
+  }, [hint]);
+
   // Atajos = botón principal: barra espaciadora, o Alt+M (Option+M en Mac), que anda incluso escribiendo
   useEffect(() => {
     const onKey = (e) => {
@@ -267,7 +290,8 @@ function Room({ code }) {
       const space = e.code === 'Space' && !/input|textarea/i.test(e.target.tagName);
       if (!altM && !space) return;
       if (isCeb || me || altM) e.preventDefault();
-      primary();
+      if (altM) primaryOrHint();
+      else primary();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -306,10 +330,14 @@ function Room({ code }) {
       offset={offset}
       isCeb={isCeb}
       self={me || cebMe}
+      votes={votes}
       busy={busy}
       flash={flash}
+      hint={hint?.text}
       onDismiss={dismiss}
-      onPrimary={primary}
+      onPrimary={primaryOrHint}
+      onVote={isCeb ? cebVote : vote}
+      onCloseVote={() => act('close_vote')}
     />
   ) : null;
 
@@ -423,6 +451,11 @@ function Room({ code }) {
       )}
 
       <Flash flash={flash} onDismiss={dismiss} />
+      {hint && (
+        <div className="toast" key={hint.at} role="status">
+          {hint.text}
+        </div>
+      )}
       {miniEl}
     </main>
   );
