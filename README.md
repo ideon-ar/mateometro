@@ -1,4 +1,4 @@
-# 🧉 mateometro 2.0
+# 🧉 mateometro 3.0
 
 Cronómetro online para la ronda de mate: el cebador pasa el mate, el que toma avisa cuando lo devuelve, y todos ven en vivo quién se demora más.
 
