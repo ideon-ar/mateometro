@@ -93,7 +93,7 @@ const Arrow = ({ back }) => (
 
 // Contenido de la ventanita. Lleva su propio reloj: la ventanita está siempre visible,
 // así que sigue fluida aunque la pestaña de la ronda quede en segundo plano.
-export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash, onDismiss, onPrimary }) {
+export function MiniWindow({ win, room, people, votes = [], offset, isCeb, self, busy, flash, hint, onDismiss, onPrimary, onVote, onCloseVote }) {
   const [now, setNow] = useState(() => Date.now() + offset);
   const primaryRef = useRef(onPrimary);
   primaryRef.current = onPrimary;
@@ -180,7 +180,16 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
     btn = { text: 'Devolví el mate', icon: mine ? <Arrow back /> : null, ret: mine, disabled: !mine };
   }
 
-  const cls = ['pip', holder && 'holding', mine && 'mine', slow && 'slow', flash && 'alert'].filter(Boolean).join(' ');
+  // Votación cada 10 mates (versión compacta)
+  const voting = room.vote_open && !room.closed;
+  const myVote = votes.find((v) => v.participant_id === self?.id);
+  const tally = (k, val) => votes.filter((v) => v[k] === val).length;
+  const setVote = (k, val) => {
+    const nv = { yerba: myVote?.yerba ?? null, agua: myVote?.agua ?? null, [k]: val };
+    onVote?.(nv.yerba, nv.agua);
+  };
+
+  const cls = ['pip', holder && 'holding', mine && 'mine', slow && 'slow', flash && 'alert', voting && 'voting'].filter(Boolean).join(' ');
   const t = fmt(turn);
 
   return createPortal(
@@ -194,6 +203,37 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
         <div className="pip-alert">
           <span className="pip-av">{flash.emoji || '🧉'}</span>
           <b>{flash.title}</b>
+        </div>
+      ) : voting ? (
+        <div className="pip-vote">
+          <div className="pip-vote-head">
+            <b>🗳️ ¡Ya van {room.vote_n * 10} mates!</b>
+            <span>
+              Votaron {votes.length} de {people.length}
+              {isCeb && (
+                <>
+                  {' · '}
+                  <button className="link" onClick={onCloseVote}>
+                    Cerrar
+                  </button>
+                </>
+              )}
+            </span>
+          </div>
+          {[
+            ['yerba', '🌿 ¿Yerba nueva?'],
+            ['agua', '🔥 ¿Calentar agua?'],
+          ].map(([k, q]) => (
+            <div className="pip-q" key={k}>
+              <span>{q}</span>
+              <button disabled={!self} className={myVote?.[k] === true ? 'sel si' : ''} onClick={() => setVote(k, true)}>
+                Sí <b>{tally(k, true)}</b>
+              </button>
+              <button disabled={!self} className={myVote?.[k] === false ? 'sel no' : ''} onClick={() => setVote(k, false)}>
+                No <b>{tally(k, false)}</b>
+              </button>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="pip-main">
@@ -210,6 +250,7 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
           )}
         </div>
       )}
+      {hint && <div className="pip-hint">{hint}</div>}
       {btn && (
         <button
           className={`big ${btn.ret ? 'ret' : ''}`}
