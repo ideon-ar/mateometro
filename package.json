@@ -2,6 +2,8 @@
   "name": "mateometro",
   "version": "3.0.0",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "IDEON S.A.S.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
