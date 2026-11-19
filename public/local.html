@@ -155,6 +155,16 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
   .foot{text-align:center;font-size:13px;color:var(--mute)}
   .foot a{color:inherit}
   .foot a:hover{color:var(--txt)}
+  :root,[data-theme='dark']{--ideon-1:#a78bfa;--ideon-2:#c4b5fd;--ideon-3:#818cf8}
+  [data-theme='light']{--ideon-1:#6d28d9;--ideon-2:#9b6bff;--ideon-3:#4f46e5}
+  body{padding-bottom:70px}
+  .credit{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:9px 16px;text-align:center;font-size:13px;color:var(--mute);
+    border-top:1px solid var(--line);background:color-mix(in srgb,var(--bg) 95%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .ideon-link{font-weight:800;letter-spacing:-.01em;background:linear-gradient(90deg,var(--ideon-1),var(--ideon-2),var(--ideon-3),var(--ideon-1));
+    background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ideon-shine 4s linear infinite;
+    text-decoration:none;text-underline-offset:3px}
+  .ideon-link:hover{text-decoration:underline;text-decoration-color:var(--ideon-1)}
+  @keyframes ideon-shine{to{background-position:300% 0}}
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -244,6 +254,8 @@ catch(e){document.documentElement.dataset.theme='dark'}})();
 
   <div class="foot"><a href="/">← Volver a la versión online</a></div>
 </div>
+
+<footer class="credit">Desarrollado por <a class="ideon-link" href="https://ideon.ar" target="_blank" rel="noopener">Ideon.ar</a></footer>
 
 <script>
 // El cebador también toma: va primero en la ronda, como una persona más
