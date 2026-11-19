@@ -525,13 +525,48 @@ body.pip-body { padding: 8px; margin: 0; min-width: 0; height: 100vh; display: f
 .pip-info { flex: 1; min-width: 0; }
 .pip-line { font-weight: 700; font-size: 15px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .pip-lbl { font-size: 12px; color: var(--mute); }
-.pip-time { font-family: var(--mono); font-size: clamp(22px, 9vw, 40px); font-variant-numeric: tabular-nums; letter-spacing: -.03em; white-space: nowrap; }
+.pip-time { flex: none; font-family: var(--mono); font-size: clamp(20px, 11vw, 40px); font-variant-numeric: tabular-nums; letter-spacing: -.03em; white-space: nowrap; }
 .pip-time .cs { font-size: .45em; }
 .pip.holding .pip-time .cs { color: var(--run1); }
 .pip.slow .pip-time, .pip.slow .pip-line { color: var(--run2); }
 .pip .big { height: 44px; font-size: 15px; flex: none; }
 .pip .big:disabled { background: var(--panel2); color: var(--mute); border: 1px dashed var(--line2); opacity: 1; box-shadow: none; }
-@media (max-height: 150px) { .pip .big { display: none; } }
+/* La ventanita se acomoda a cualquier tamaño */
+.pip, .pip-main, .pip-info { min-width: 0; }
+.pip-av { transition: width .3s var(--ease), height .3s var(--ease); }
+.pip-quick {
+  display: none; width: 38px; height: 38px; flex: none; border-radius: 50%; place-items: center;
+  background: var(--a1); color: var(--on-a1); box-shadow: inset 0 -2px 0 var(--a1-edge);
+}
+.pip-quick.ret { background: var(--run1); color: var(--on-run1); box-shadow: inset 0 -2px 0 var(--run1-edge); }
+.pip-quick:disabled { background: var(--panel2); color: var(--mute); box-shadow: none; border: 1px dashed var(--line2); opacity: 1; }
+.pip-quick:not(:disabled):active { transform: translateY(1px); }
+.pip-quick .ico { width: 18px; height: 18px; }
+/* Más baja: sin la barra de arriba */
+@media (max-height: 190px) {
+  .pip-top { display: none; }
+  .pip { gap: 6px; padding: 10px 10px 8px; }
+  .pip .big { height: 40px; }
+}
+/* Muy chiquita: una sola fila con el mate, el tiempo y el botón redondo */
+@media (max-height: 130px) {
+  body.pip-body { padding: 6px; }
+  .pip { padding: 8px 10px; justify-content: center; }
+  .pip .big, .pip-lbl, .pip-hint, .pip-vote-head { display: none; }
+  .pip-quick { display: grid; }
+  .pip-line { -webkit-line-clamp: 1; font-size: 14px; }
+}
+/* Angosta: solo lo esencial */
+@media (max-width: 290px) {
+  .pip-info { display: none; }
+  .pip-main { justify-content: space-between; }
+  .pip .big { font-size: 13px; padding: 0 10px; gap: 6px; }
+  .pip-brand { font-size: 11px; }
+}
+@media (max-width: 210px) {
+  .pip-time .cs { display: none; }
+  .pip .big .ico { display: none; }
+}
 
 /* Votación dentro de la ventanita */
 .pip.voting { border-color: var(--a1); }
@@ -565,8 +600,13 @@ body.pip-body { padding: 8px; margin: 0; min-width: 0; height: 100vh; display: f
 }
 
 /* ---------- Cebando: mate en vista 3/4 en el cuadradito del cebador ---------- */
-.ceb .who .av { width: 52px; height: 52px; font-size: 28px; border-radius: 14px; }
+.ceb .who .av { width: 52px; height: 52px; font-size: 28px; border-radius: 14px; transition: width .3s var(--ease), height .3s var(--ease); }
+/* Mientras se ceba, el cuadradito se agranda para que se vea el mate */
+.ceb .who .av.is-cebando { width: 84px; height: 84px; border-radius: 18px; }
 .pip-av.ceb-av { width: 46px; height: 46px; font-size: 24px; }
+.pip-av.is-cebando { width: 66px; height: 66px; border-radius: 14px; }
+@media (max-height: 190px) { .pip-av.is-cebando { width: 54px; height: 54px; } }
+@media (max-height: 130px) { .pip-av.is-cebando { width: 46px; height: 46px; } }
 .ceb-av { position: relative; overflow: hidden; }
 .ceb-emoji { position: relative; line-height: 1; }
 .ceb-av.is-cebando { background: color-mix(in srgb, #7dd3fc 12%, var(--panel2)); }

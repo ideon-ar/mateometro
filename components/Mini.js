@@ -47,6 +47,8 @@ export function useMiniWindow() {
     const w = await window.documentPictureInPicture.requestWindow({ width: 340, height: 220 });
     w.document.title = 'mateometro';
     copyStyles(w.document);
+    // La página tiene un ancho mínimo de 320px; la ventanita no, así se puede achicar sin que se corte
+    w.document.documentElement.style.minWidth = '0';
     w.document.body.className = 'pip-body';
     // Mismo tema que la página, y que siga los cambios
     const sync = () => {
@@ -254,6 +256,21 @@ export function MiniWindow({ win, room, people, votes = [], offset, isCeb, self,
               {t.main}
               <span className="cs">{t.cs}</span>
             </div>
+          )}
+          {/* Botón redondo, para cuando la ventanita es muy chica */}
+          {btn && (
+            <button
+              className={`pip-quick ${btn.ret ? 'ret' : ''}`}
+              disabled={busy || btn.disabled}
+              aria-label={btn.text}
+              title={btn.text}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrimary?.();
+              }}
+            >
+              {btn.icon || <Arrow />}
+            </button>
           )}
         </div>
       )}
