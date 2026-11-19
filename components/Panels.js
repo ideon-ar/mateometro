@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { Ring, Time, Ranking } from './Board';
+import { CebAvatar, isCebando } from './Cebando';
 import { elapsedC, elapsedP, turnP, fmt } from '@/lib/time';
 import { AVATARS, randomNickname, SLOW_MS, slowMessage } from '@/lib/fun';
 
@@ -86,7 +87,7 @@ export function CebPanel({ room, people, now, isCeb, onAction, busy, shareUrl })
       </Ring>
       <div className="cinfo">
         <div className="who">
-          <span className="av">{room.cebador_avatar}</span>
+          <CebAvatar avatar={room.cebador_avatar} cebando={isCebando(room)} />
           <div>
             <div className="name">
               {room.cebador_name}

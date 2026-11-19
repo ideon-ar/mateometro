@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { fmt, turnP } from '@/lib/time';
 import { SLOW_MS } from '@/lib/fun';
+import { CebAvatar, isCebando } from './Cebando';
 
 // Ventanita flotante "siempre encima", como el miniplayer de Spotify.
 // Usa Document Picture-in-Picture (Chrome y Edge de escritorio).
@@ -158,9 +159,10 @@ export function MiniWindow({ win, room, people, votes = [], offset, isCeb, self,
     line = mine ? '¡Tenés el mate!' : `Lo tiene ${holder.name}`;
     label = 'Este mate';
   } else {
-    who = next;
+    // Mientras se ceba se ve el cuadradito del cebador con la animación
+    who = { avatar: room.cebador_avatar, color: by(room.ceb_pid)?.color, ceb: true };
     line = next ? (self && next.id === self.id ? 'Te toca a vos' : `Le toca a ${next.name}`) : 'Esperando gente…';
-    label = 'Cebando';
+    label = room.paused ? 'Cebando (en pausa)' : 'Cebando…';
   }
 
   // Botón principal (el mismo que la barra espaciadora)
@@ -237,7 +239,12 @@ export function MiniWindow({ win, room, people, votes = [], offset, isCeb, self,
         </div>
       ) : (
         <div className="pip-main">
-          {who && <span className="pip-av">{who.avatar}</span>}
+          {who &&
+            (who.ceb ? (
+              <CebAvatar avatar={who.avatar} cebando={isCebando(room)} className="pip-av" />
+            ) : (
+              <span className="pip-av">{who.avatar}</span>
+            ))}
           <div className="pip-info">
             <div className="pip-line">{line}</div>
             {label && <div className="pip-lbl">{label}</div>}
