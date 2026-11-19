@@ -91,7 +91,7 @@ export function Header({ small }) {
         <Logo size={small ? 40 : 68} />
       </span>
       <h1 className="brand">
-        mateometro<span className="ver">2.0</span>
+        mateometro<span className="ver">3.0</span>
       </h1>
     </header>
   );

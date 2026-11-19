@@ -143,7 +143,10 @@ export function Cards({ room, people, now, meId, isCeb, onAction, onMove }) {
   const markAfter = drag && drag.index !== from && drag.index >= others.length ? others[others.length - 1]?.id : null;
 
   return (
-    <div className={`grid ${drag ? 'dragging' : ''}`}>
+    <div
+      className={`grid ${drag ? 'dragging' : ''}`}
+      style={{ maxWidth: `calc(${list.length} * 480px + ${list.length - 1} * 12px)` }}
+    >
       {list.map((p, i) => {
         const on = Boolean(p.started_at);
         const holding = room.holder_id === p.id;

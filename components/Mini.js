@@ -46,7 +46,7 @@ export function useMiniWindow() {
     const w = await window.documentPictureInPicture.requestWindow({ width: 340, height: 220 });
     w.document.title = 'mateometro';
     copyStyles(w.document);
-    w.document.body.className = 'mini-body';
+    w.document.body.className = 'pip-body';
     // Mismo tema que la página, y que siga los cambios
     const sync = () => {
       w.document.documentElement.dataset.theme = document.documentElement.dataset.theme || 'dark';
@@ -178,30 +178,30 @@ export function MiniWindow({ win, room, people, offset, isCeb, self, busy, flash
     btn = { text: 'Devolví el mate', icon: mine ? <Arrow back /> : null, ret: mine, disabled: !mine };
   }
 
-  const cls = ['mini', holder && 'holding', mine && 'mine', slow && 'slow', flash && 'alert'].filter(Boolean).join(' ');
+  const cls = ['pip', holder && 'holding', mine && 'mine', slow && 'slow', flash && 'alert'].filter(Boolean).join(' ');
   const t = fmt(turn);
 
   return createPortal(
     <div className={cls} style={{ '--c': who?.color || 'var(--a1)' }} onClick={flash ? onDismiss : undefined}>
-      <div className="mini-top">
-        <span className="mini-brand">🧉 mateometro · {room.code}</span>
+      <div className="pip-top">
+        <span className="pip-brand">🧉 mateometro · {room.code}</span>
         {room.paused && <span className="paused">En pausa</span>}
         {!room.paused && room.state !== 'idle' && !room.closed && <span>Ronda {room.round}</span>}
       </div>
       {flash ? (
-        <div className="mini-alert">
-          <span className="mini-av">{flash.emoji || '🧉'}</span>
+        <div className="pip-alert">
+          <span className="pip-av">{flash.emoji || '🧉'}</span>
           <b>{flash.title}</b>
         </div>
       ) : (
-        <div className="mini-main">
-          {who && <span className="mini-av">{who.avatar}</span>}
-          <div className="mini-info">
-            <div className="mini-line">{line}</div>
-            {label && <div className="mini-lbl">{label}</div>}
+        <div className="pip-main">
+          {who && <span className="pip-av">{who.avatar}</span>}
+          <div className="pip-info">
+            <div className="pip-line">{line}</div>
+            {label && <div className="pip-lbl">{label}</div>}
           </div>
           {!room.closed && room.state !== 'idle' && (
-            <div className="mini-time">
+            <div className="pip-time">
               {t.main}
               <span className="cs">{t.cs}</span>
             </div>
