@@ -2,6 +2,7 @@ import './globals.css';
 import { Background } from '@/components/Art';
 import { PrefsProvider, noFlashScript } from '@/lib/prefs';
 import UpdateBanner from '@/components/UpdateBanner';
+import Credit from '@/components/Credit';
 
 export const metadata = {
   title: 'mateometro',
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
           <Background />
           <UpdateBanner />
           {children}
+          <Credit />
         </PrefsProvider>
       </body>
     </html>

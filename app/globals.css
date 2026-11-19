@@ -478,14 +478,14 @@ button.pill.exit:not(:disabled):hover .i { transform: translateX(2px); }
 .qopts button.sel.no { border: 2px solid var(--run2); background: color-mix(in srgb, var(--run2) 10%, var(--panel)); }
 .win { font-size: 13px; color: var(--a1-ink); font-weight: 600; }
 .mfoot { display: flex; justify-content: center; }
-.votepill { position: fixed; bottom: 20px; right: 20px; z-index: 40; height: 46px; padding: 0 18px; border-radius: var(--r-md); background: var(--a1); color: var(--on-a1); font-weight: 600; box-shadow: inset 0 -3px 0 var(--a1-edge), var(--shadow-lg); animation: rise .4s var(--ease) backwards; }
+.votepill { position: fixed; bottom: 52px; right: 20px; z-index: 40; height: 46px; padding: 0 18px; border-radius: var(--r-md); background: var(--a1); color: var(--on-a1); font-weight: 600; box-shadow: inset 0 -3px 0 var(--a1-edge), var(--shadow-lg); animation: rise .4s var(--ease) backwards; }
 .votepill:hover { background: var(--a1h); }
 
 /* ---------- Aviso grande ---------- */
 .flash { position: fixed; inset: 0; z-index: 60; pointer-events: none; box-shadow: inset 0 0 0 5px var(--c); animation: flashb 1s ease-in-out infinite; }
 @keyframes flashb { 50% { box-shadow: inset 0 0 0 5px transparent; background: color-mix(in srgb, var(--c) 6%, transparent); } }
 .flash-card {
-  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); border: 1px solid var(--line2); border-top: 5px solid var(--c);
+  position: absolute; bottom: 56px; left: 50%; transform: translateX(-50%); border: 1px solid var(--line2); border-top: 5px solid var(--c);
   border-radius: var(--r-lg); padding: 16px 26px; text-align: center; min-width: 290px; box-shadow: var(--shadow-lg);
   animation: drop .45s cubic-bezier(.3, 1.4, .5, 1) both;
 }
@@ -585,7 +585,7 @@ body.pip-body { padding: 8px; margin: 0; min-width: 0; height: 100vh; display: f
 
 /* Mensajito del atajo */
 .toast {
-  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); z-index: 65; max-width: calc(100% - 32px);
+  position: fixed; bottom: 54px; left: 50%; transform: translateX(-50%); z-index: 65; max-width: calc(100% - 32px);
   background: var(--txt); color: var(--bg); padding: 10px 16px; border-radius: var(--r-sm); font-size: 14px; font-weight: 600;
   box-shadow: var(--shadow-lg); animation: toastin .25s var(--ease) both; text-align: center;
 }
@@ -641,3 +641,22 @@ body.pip-body { padding: 8px; margin: 0; min-width: 0; height: 100vh; display: f
 [data-motion='off'] .ceb-stream { animation: none; opacity: 0; }
 [data-motion='off'] .ceb-water { animation: none; transform: none; }
 [data-motion='off'] .ceb-ripple, [data-motion='off'] .ceb-flow { animation: none; }
+
+/* ---------- Firma de IDEON: abajo y siempre visible ---------- */
+:root, [data-theme='dark'] { --ideon-1: #a78bfa; --ideon-2: #c4b5fd; --ideon-3: #818cf8; }
+[data-theme='light'] { --ideon-1: #6d28d9; --ideon-2: #9b6bff; --ideon-3: #4f46e5; }
+.credit {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 9px 16px; text-align: center;
+  font-size: 13px; color: var(--mute); border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 95%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.ideon-link {
+  font-weight: 800; letter-spacing: -.01em;
+  background: linear-gradient(90deg, var(--ideon-1), var(--ideon-2), var(--ideon-3), var(--ideon-1));
+  background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: ideon-shine 4s linear infinite; text-decoration: none; text-underline-offset: 3px;
+}
+.ideon-link:hover { text-decoration: underline; text-decoration-color: var(--ideon-1); }
+@keyframes ideon-shine { to { background-position: 300% 0; } }
+body.pip-body .credit { display: none; }
