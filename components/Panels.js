@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Ring, Time, Ranking } from './Board';
 import { CebAvatar, isCebando } from './Cebando';
 import { elapsedC, elapsedP, turnP, fmt } from '@/lib/time';
-import { AVATARS, randomNickname, SLOW_MS, slowMessage } from '@/lib/fun';
+import { AVATAR_GROUPS, ALL_AVATARS, firstEmoji, randomNickname, SLOW_MS, slowMessage } from '@/lib/fun';
 
 const Arrow = ({ back }) => (
   <svg viewBox="0 0 24 24" className="ico">
@@ -238,14 +238,59 @@ export function ClosedPanel({ room, people, now, onHome }) {
   );
 }
 
+// Selector de avatar: categorías + "Otro emoji" para escribir o pegar cualquiera
 export function AvatarPicker({ value, onChange }) {
+  const [group, setGroup] = useState(() => Math.max(0, AVATAR_GROUPS.findIndex((g) => g.list.includes(value))));
+  const [custom, setCustom] = useState(() => (ALL_AVATARS.includes(value) ? '' : value || ''));
+  const [bad, setBad] = useState(false);
+  const isCustom = Boolean(value) && !ALL_AVATARS.includes(value);
+
+  const typeCustom = (text) => {
+    const e = firstEmoji(text);
+    setBad(Boolean(text.trim()) && !e);
+    setCustom(e || text);
+    if (e) onChange(e);
+  };
+
   return (
-    <div className="avatars">
-      {AVATARS.map((a) => (
-        <button type="button" key={a} className={a === value ? 'sel' : ''} onClick={() => onChange(a)}>
-          {a}
-        </button>
-      ))}
+    <div className="avpick">
+      <div className="avtabs" role="tablist">
+        {AVATAR_GROUPS.map((g, i) => (
+          <button
+            type="button"
+            key={g.name}
+            role="tab"
+            aria-selected={i === group}
+            className={i === group ? 'act' : ''}
+            onClick={() => setGroup(i)}
+          >
+            <span aria-hidden="true">{g.list[0]}</span> {g.name}
+          </button>
+        ))}
+      </div>
+      <div className="avatars">
+        {AVATAR_GROUPS[group].list.map((a) => (
+          <button type="button" key={a} className={a === value ? 'sel' : ''} onClick={() => onChange(a)}>
+            {a}
+          </button>
+        ))}
+      </div>
+      <label className="avcustom">
+        <span>¿No está el tuyo? Escribí o pegá cualquier emoji</span>
+        <span className="avcustom-row">
+          <input
+            value={custom}
+            onChange={(e) => typeCustom(e.target.value)}
+            placeholder="😀"
+            maxLength={16}
+            aria-invalid={bad}
+            className={isCustom ? 'sel' : ''}
+          />
+          <small className={bad ? 'err' : ''}>
+            {bad ? 'Eso no es un emoji 🤔' : 'Win + . en Windows · Ctrl + Cmd + Espacio en Mac · el teclado de emojis en el celu'}
+          </small>
+        </span>
+      </label>
     </div>
   );
 }
