@@ -270,6 +270,22 @@ button.pill.exit:not(:disabled):hover .i { transform: translateX(2px); }
 .avatars button { height: 44px; border-radius: var(--r-sm); font-size: 22px; background: var(--panel2); border: 1px solid transparent; }
 .avatars button:hover { border-color: var(--line2); }
 .avatars button.sel { border: 2px solid var(--a1); background: color-mix(in srgb, var(--a1) 12%, var(--panel)); }
+/* Categorías de avatares y "Otro emoji" */
+.avpick { display: flex; flex-direction: column; gap: 10px; }
+.avtabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.avtabs button {
+  flex: none; height: 32px; padding: 0 11px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap;
+  color: var(--mute); background: var(--panel2); border: 1px solid var(--line); transition: color .15s, border-color .15s, background-color .15s;
+}
+.avtabs button:hover { color: var(--txt); border-color: var(--line2); }
+.avtabs button.act { color: var(--txt); background: var(--raised); border-color: var(--a1); }
+.avcustom { gap: 6px; }
+.avcustom > span:first-child { font-size: 12px; color: var(--mute); font-weight: 600; }
+.avcustom-row { display: flex; align-items: center; gap: 10px; }
+.form .avcustom input { width: 64px; height: 44px; flex: none; text-align: center; font-size: 22px; padding: 0; }
+.form .avcustom input.sel { border: 2px solid var(--a1); background: color-mix(in srgb, var(--a1) 12%, var(--panel)); }
+.avcustom small { font-size: 12px; color: var(--mute); font-weight: 500; line-height: 1.35; }
+.avcustom small.err { color: var(--run2); }
 .err { color: var(--run2); font-size: 14px; font-weight: 500; }
 .foot-link { text-align: center; color: var(--mute); font-size: 13px; transition: color .15s; }
 .foot-link:hover { color: var(--txt); }
